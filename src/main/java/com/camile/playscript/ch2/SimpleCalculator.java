@@ -17,15 +17,10 @@ import com.camile.playscript.ch1.SimpleLexer;
  * 递归项在右边，会自然的对应右结合。我们真正需要的是左结合。
  */
 public class SimpleCalculator {
-
-    public static void main(String[] args) {
-
-    }
-
     /**
      * 执行脚本，并打印输出AST和求值过程。
      *
-     * @param script
+     * @param script 脚本
      */
     public void evaluate(String script) {
         try {
@@ -42,23 +37,21 @@ public class SimpleCalculator {
     /**
      * 解析脚本，并返回根节点
      *
-     * @param code
-     * @return
+     * @param code 代码
+     * @return ASTNode
      * @throws Exception
      */
     public ASTNode parse(String code) throws Exception {
         SimpleLexer lexer = new SimpleLexer();
         TokenReader tokens = lexer.tokenize(code);
-
         ASTNode rootNode = prog(tokens);
-
         return rootNode;
     }
 
     /**
      * 对某个AST节点求值，并打印求值过程。
      *
-     * @param node
+     * @param node 抽象语法树节点
      * @param indent 打印输出时的缩进量，用tab控制
      * @return
      */
@@ -76,7 +69,7 @@ public class SimpleCalculator {
                 int value1 = evaluate(child1, indent + "\t");
                 ASTNode child2 = node.getChildren().get(1);
                 int value2 = evaluate(child2, indent + "\t");
-                if (node.getText().equals("+")) {
+                if ("+".equals(node.getText())) {
                     result = value1 + value2;
                 } else {
                     result = value1 - value2;
@@ -87,14 +80,14 @@ public class SimpleCalculator {
                 value1 = evaluate(child1, indent + "\t");
                 child2 = node.getChildren().get(1);
                 value2 = evaluate(child2, indent + "\t");
-                if (node.getText().equals("*")) {
+                if ("*".equals(node.getText())) {
                     result = value1 * value2;
                 } else {
                     result = value1 / value2;
                 }
                 break;
             case IntLiteral:
-                result = Integer.valueOf(node.getText()).intValue();
+                result = Integer.parseInt(node.getText());
                 break;
             default:
         }
@@ -110,9 +103,7 @@ public class SimpleCalculator {
      */
     private SimpleASTNode prog(TokenReader tokens) throws Exception {
         SimpleASTNode node = new SimpleASTNode(ASTNodeType.Programm, "Calculator");
-
         SimpleASTNode child = additive(tokens);
-
         if (child != null) {
             node.addChild(child);
         }
@@ -129,17 +120,24 @@ public class SimpleCalculator {
      */
     public SimpleASTNode intDeclare(TokenReader tokens) throws Exception {
         SimpleASTNode node = null;
-        Token token = tokens.peek();    //预读
-        if (token != null && token.getType() == TokenType.Int) {   //匹配Int
-            token = tokens.read();      //消耗掉int
-            if (tokens.peek().getType() == TokenType.Identifier) { //匹配标识符
-                token = tokens.read();  //消耗掉标识符
+        //预读
+        Token token = tokens.peek();
+        if (token != null && token.getType() == TokenType.Int) {
+            //匹配Int
+            tokens.read();
+            //匹配标识符
+            if (tokens.peek().getType() == TokenType.Identifier) {
+                //消耗掉标识符
+                token = tokens.read();
                 //创建当前节点，并把变量名记到AST节点的文本值中，这里新建一个变量子节点也是可以的
                 node = new SimpleASTNode(ASTNodeType.IntDeclaration, token.getText());
-                token = tokens.peek();  //预读
+                //预读
+                token = tokens.peek();
                 if (token != null && token.getType() == TokenType.Assignment) {
-                    tokens.read();      //消耗掉等号
-                    SimpleASTNode child = additive(tokens);  //匹配一个表达式
+                    //消耗掉等号
+                    tokens.read();
+                    //匹配一个表达式
+                    SimpleASTNode child = additive(tokens);
                     if (child == null) {
                         throw new Exception("invalide variable initialization, expecting an expression");
                     } else {
@@ -150,13 +148,11 @@ public class SimpleCalculator {
                 throw new Exception("variable name expected");
             }
 
-            if (node != null) {
-                token = tokens.peek();
-                if (token != null && token.getType() == TokenType.SemiColon) {
-                    tokens.read();
-                } else {
-                    throw new Exception("invalid statement, expecting semicolon");
-                }
+            token = tokens.peek();
+            if (token != null && token.getType() == TokenType.SemiColon) {
+                tokens.read();
+            } else {
+                throw new Exception("invalid statement, expecting semicolon");
             }
         }
         return node;
@@ -192,7 +188,7 @@ public class SimpleCalculator {
     /**
      * 语法解析：乘法表达式
      *
-     * @return
+     * @return SimpleASTNode 最简单的语法树
      * @throws Exception
      */
     private SimpleASTNode multiplicative(TokenReader tokens) throws Exception {
@@ -247,14 +243,15 @@ public class SimpleCalculator {
                 }
             }
         }
-        return node;  //这个方法也做了AST的简化，就是不用构造一个primary节点，直接返回子节点。因为它只有一个子节点。
+        //这个方法也做了AST的简化，就是不用构造一个primary节点，直接返回子节点。因为它只有一个子节点。
+        return node;
     }
 
 
     /**
      * 打印输出AST的树状结构
      *
-     * @param node
+     * @param node 语法树节点
      * @param indent 缩进字符，由tab组成，每一级多一个tab
      */
     public void dumpAST(ASTNode node, String indent) {
