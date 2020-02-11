@@ -12,9 +12,17 @@ import com.camile.playscript.ch1.SimpleLexer;
  * 实现一个计算器，但计算的结合性是有问题的。因为它使用了下面的语法规则：
  * <p>
  * additive -> multiplicative | multiplicative + additive
- * multiplicative -> primary | primary * multiplicative    //感谢@Void_seT，原来写成+号了，写错了。
+ * multiplicative -> primary | primary * multiplicative
  * <p>
  * 递归项在右边，会自然的对应右结合。我们真正需要的是左结合。
+ *
+ * 上下文无关文法之巴克斯范式表达法：
+ *
+ * add ::= mul | add + mul  add可以用mul or add + mul来标示。下面同理
+ * mul ::= pri | mul * pri
+ * pri ::= Id | Num | (add)
+ *
+ * 当遇到Id Num这种不可展开的文法时。我们称之为终结符
  */
 public class SimpleCalculator {
     /**
@@ -51,7 +59,7 @@ public class SimpleCalculator {
     /**
      * 对某个AST节点求值，并打印求值过程。
      *
-     * @param node 抽象语法树节点
+     * @param node   抽象语法树节点
      * @param indent 打印输出时的缩进量，用tab控制
      * @return
      */
@@ -164,22 +172,28 @@ public class SimpleCalculator {
      * @return
      * @throws Exception
      */
+
     private SimpleASTNode additive(TokenReader tokens) throws Exception {
+        //add -> mul (+ mul)*
+        //即一个add文法可以转换成一个mul文法跟着出现0次+的 (+ mul)
         SimpleASTNode child1 = multiplicative(tokens);
         SimpleASTNode node = child1;
-
-        Token token = tokens.peek();
-        if (child1 != null && token != null) {
-            if (token.getType() == TokenType.Plus || token.getType() == TokenType.Minus) {
-                token = tokens.read();
-                SimpleASTNode child2 = additive(tokens);
-                if (child2 != null) {
-                    node = new SimpleASTNode(ASTNodeType.Additive, token.getText());
-                    node.addChild(child1);
-                    node.addChild(child2);
-                } else {
-                    throw new Exception("invalid additive expression, expecting the right part.");
+        if (child1 != null) {
+            while (true) {
+                Token token = tokens.peek();
+                //是否有(+ mul)出现
+                if (token == null || (token.getType() != TokenType.Plus && token.getType() != TokenType.Minus)) {
+                    break;
                 }
+                //读出加号
+                token = tokens.read();
+                //计算下级节点
+                SimpleASTNode child2 = multiplicative(tokens);
+                node = new SimpleASTNode(ASTNodeType.Additive, token.getText());
+                //注意，新节点在顶层，保证正确的结合性
+                node.addChild(child1);
+                node.addChild(child2);
+                child1 = node;
             }
         }
         return node;
@@ -251,7 +265,7 @@ public class SimpleCalculator {
     /**
      * 打印输出AST的树状结构
      *
-     * @param node 语法树节点
+     * @param node   语法树节点
      * @param indent 缩进字符，由tab组成，每一级多一个tab
      */
     public void dumpAST(ASTNode node, String indent) {

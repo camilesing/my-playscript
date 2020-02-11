@@ -36,7 +36,7 @@ public class ASTTest {
         calculator.evaluate(script);
 
         script = "2+3+4";
-        System.out.println("\n计算: " + script + "，结合性出现错误。");
+        System.out.println("\n计算: " + script + "，结合性出现不再错误。");
         calculator.evaluate(script);
     }
 }
