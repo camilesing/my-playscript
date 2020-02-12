@@ -1,41 +1,47 @@
 package com.camile.playscript.ch1;
 
 
+import com.camile.playscript.ASTNode;
+import com.camile.playscript.ch3.SimpleParser;
 import org.junit.jupiter.api.Test;
 
 public class ParserTest {
 
     @Test
     public void test() {
-        SimpleLexer lexer = new SimpleLexer();
+        SimpleParser parser = new SimpleParser();
+        String script;
+        ASTNode tree;
 
-        String script = "int age = 45;";
-        System.out.println("parse: " + script);
-        SimpleTokenReader tokenReader = lexer.tokenize(script);
-        lexer.dump(tokenReader);
+        try {
+            script = "int age = 45+2; age= 20; age+10*2;";
+            System.out.println("解析："+script);
+            tree = parser.parse(script);
+            parser.dumpAST(tree, "");
+        } catch (Exception e) {
 
-        //测试inta的解析
-        script = "inta age = 45;";
-        System.out.println("\nparse :" + script);
-        tokenReader = lexer.tokenize(script);
-        lexer.dump(tokenReader);
+            System.out.println(e.getMessage());
+        }
 
-        //测试in的解析
-        script = "in age = 45;";
-        System.out.println("\nparse :" + script);
-        tokenReader = lexer.tokenize(script);
-        lexer.dump(tokenReader);
+        //测试异常语法
+        try {
+            script = "2+3+;";
+            System.out.println("解析："+script);
+            tree = parser.parse(script);
+            parser.dumpAST(tree, "");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
 
-        //测试>=的解析
-        script = "age >= 45;";
-        System.out.println("\nparse :" + script);
-        tokenReader = lexer.tokenize(script);
-        lexer.dump(tokenReader);
+        //测试异常语法
+        try {
+            script = "2+3*;";
+            System.out.println("解析："+script);
+            tree = parser.parse(script);
+            parser.dumpAST(tree, "");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
 
-        //测试>的解析
-        script = "age > 45;";
-        System.out.println("\nparse :" + script);
-        tokenReader = lexer.tokenize(script);
-        lexer.dump(tokenReader);
     }
 }

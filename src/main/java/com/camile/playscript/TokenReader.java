@@ -16,6 +16,7 @@ public interface TokenReader {
 
     /**
      * Token流回退一步。恢复原来的Token。
+     * 回溯
      */
     public void unread();
 
